@@ -1,30 +1,41 @@
-import subprocess
-import sys
-
-# Cek dan instal TikTokPy jika belum terinstal
-try:
-    # Coba import TikTokPy, jika gagal akan mencoba menginstal
-    from TikTokPy import TikTokPy
-except ImportError:
-    print("TikTokPy belum terinstal. Menginstal...")
-    subprocess.check_call([sys.executable, "-m", "pip", "install", "TikTokPy"])
-    from TikTokPy import TikTokPy  # Setelah instalasi, impor TikTokPy
-
+from TikTokPy import TikTokPy
 from fake_useragent import UserAgent
 import time
 import random
+import requests
 
 # Fungsi untuk mendapatkan user-agent acak
 def get_random_user_agent():
     ua = UserAgent()
     return ua.random
 
-# Login ke akun TikTok
-def login_tiktok():
+# Fungsi untuk mendapatkan Access Token menggunakan OAuth 2.0
+def get_access_token():
     print("=== Login ke Akun TikTok ===")
-    username = input("Masukkan username TikTok: ").strip()
-    password = input("Masukkan password TikTok: ").strip()
-    return username, password
+    # Gantilah URL ini dengan URL otorisasi dari TikTok
+    authorization_url = "https://www.tiktok.com/auth/authorize/?client_key=<YOUR_CLIENT_KEY>&response_type=code&scope=user.info.basic&redirect_uri=<YOUR_REDIRECT_URI>"
+    print(f"Klik URL berikut untuk login dan mendapatkan authorization code: {authorization_url}")
+    
+    authorization_code = input("Masukkan authorization code yang Anda terima: ").strip()
+
+    # Menukar authorization code dengan access token
+    url = 'https://open-api.tiktok.com/oauth/access_token/'
+    data = {
+        'client_key': '<YOUR_CLIENT_KEY>',
+        'client_secret': '<YOUR_CLIENT_SECRET>',
+        'code': authorization_code,
+        'grant_type': 'authorization_code',
+        'redirect_uri': '<YOUR_REDIRECT_URI>',
+    }
+    
+    response = requests.post(url, data=data)
+    if response.status_code == 200:
+        access_token = response.json()['data']['access_token']
+        print(f"Access token diperoleh: {access_token}")
+        return access_token
+    else:
+        print("Error mendapatkan access token:", response.json())
+        return None
 
 # Proxy untuk menyamarkan IP
 proxy = "http://username:password@proxy_address:port"  # Ganti dengan proxy Anda
@@ -35,16 +46,12 @@ proxies = {"http": proxy, "https": proxy} if use_proxy == "y" else None
 mode_paksa = input("Apakah Anda ingin menggunakan mode paksa sampai 300 followers? (y/n): ").strip().lower()
 
 # Fungsi auto follow
-async def auto_follow(username, password):
+async def auto_follow(access_token):
     # Set user-agent awal
     current_user_agent = get_random_user_agent()
 
-    async with TikTokPy(
-        username=username,
-        password=password,
-        proxies=proxies,  # Proxy (opsional)
-        headers={"User-Agent": current_user_agent},  # User-Agent awal
-    ) as bot:
+    # Menggunakan TikTokPy dengan access token
+    async with TikTokPy(access_token=access_token, proxies=proxies, headers={"User-Agent": current_user_agent}) as bot:
         target_username = input("Masukkan username target yang followers-nya ingin di-follow: ").strip()
         followers = await bot.get_user_followers(target_username)
 
@@ -109,9 +116,9 @@ async def auto_follow(username, password):
 
 # Jalankan script
 if __name__ == "__main__":
-    # Login ke TikTok
-    user, pwd = login_tiktok()
-
-    # Jalankan auto follow
-    import asyncio
-    asyncio.run(auto_follow(user, pwd))
+    # Dapatkan access token melalui OAuth 2.0
+    access_token = get_access_token()
+    if access_token:
+        # Jalankan auto follow dengan access token
+        import asyncio
+        asyncio.run(auto_follow(access_token))
