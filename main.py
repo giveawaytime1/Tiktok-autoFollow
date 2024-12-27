@@ -1,4 +1,3 @@
-from TikTokPy import TikTokPy
 from fake_useragent import UserAgent
 import time
 import random
