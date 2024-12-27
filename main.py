@@ -1,4 +1,15 @@
-from TikTokPy import TikTokPy
+import subprocess
+import sys
+
+# Cek dan instal TikTokPy jika belum terinstal
+try:
+    # Coba import TikTokPy, jika gagal akan mencoba menginstal
+    from TikTokPy import TikTokPy
+except ImportError:
+    print("TikTokPy belum terinstal. Menginstal...")
+    subprocess.check_call([sys.executable, "-m", "pip", "install", "TikTokPy"])
+    from TikTokPy import TikTokPy  # Setelah instalasi, impor TikTokPy
+
 from fake_useragent import UserAgent
 import time
 import random
@@ -8,15 +19,12 @@ def get_random_user_agent():
     ua = UserAgent()
     return ua.random
 
-# Fungsi untuk memasukkan dan memverifikasi cookie
-def get_cookie():
-    print("=== Masukkan Cookie TikTok Anda ===")
-    cookie = input("Tempelkan cookie TikTok Anda di sini: ").strip()
-
-    if not cookie:
-        print("Cookie tidak valid. Harap tempelkan cookie yang benar.")
-        exit()
-    return cookie
+# Login ke akun TikTok
+def login_tiktok():
+    print("=== Login ke Akun TikTok ===")
+    username = input("Masukkan username TikTok: ").strip()
+    password = input("Masukkan password TikTok: ").strip()
+    return username, password
 
 # Proxy untuk menyamarkan IP
 proxy = "http://username:password@proxy_address:port"  # Ganti dengan proxy Anda
@@ -27,12 +35,13 @@ proxies = {"http": proxy, "https": proxy} if use_proxy == "y" else None
 mode_paksa = input("Apakah Anda ingin menggunakan mode paksa sampai 300 followers? (y/n): ").strip().lower()
 
 # Fungsi auto follow
-async def auto_follow(cookie):
+async def auto_follow(username, password):
     # Set user-agent awal
     current_user_agent = get_random_user_agent()
 
     async with TikTokPy(
-        custom_cookie=cookie,
+        username=username,
+        password=password,
         proxies=proxies,  # Proxy (opsional)
         headers={"User-Agent": current_user_agent},  # User-Agent awal
     ) as bot:
@@ -100,9 +109,9 @@ async def auto_follow(cookie):
 
 # Jalankan script
 if __name__ == "__main__":
-    # Baca cookie dari input
-    cookie = get_cookie()
+    # Login ke TikTok
+    user, pwd = login_tiktok()
 
     # Jalankan auto follow
     import asyncio
-    asyncio.run(auto_follow(cookie))
+    asyncio.run(auto_follow(user, pwd))
