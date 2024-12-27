@@ -8,12 +8,15 @@ def get_random_user_agent():
     ua = UserAgent()
     return ua.random
 
-# Login ke akun TikTok
-def login_tiktok():
-    print("=== Login ke Akun TikTok ===")
-    username = input("Masukkan username TikTok: ").strip()
-    password = input("Masukkan password TikTok: ").strip()
-    return username, password
+# Fungsi untuk memasukkan dan memverifikasi cookie
+def get_cookie():
+    print("=== Masukkan Cookie TikTok Anda ===")
+    cookie = input("Tempelkan cookie TikTok Anda di sini: ").strip()
+
+    if not cookie:
+        print("Cookie tidak valid. Harap tempelkan cookie yang benar.")
+        exit()
+    return cookie
 
 # Proxy untuk menyamarkan IP
 proxy = "http://username:password@proxy_address:port"  # Ganti dengan proxy Anda
@@ -24,13 +27,12 @@ proxies = {"http": proxy, "https": proxy} if use_proxy == "y" else None
 mode_paksa = input("Apakah Anda ingin menggunakan mode paksa sampai 300 followers? (y/n): ").strip().lower()
 
 # Fungsi auto follow
-async def auto_follow(username, password):
+async def auto_follow(cookie):
     # Set user-agent awal
     current_user_agent = get_random_user_agent()
 
     async with TikTokPy(
-        username=username,
-        password=password,
+        custom_cookie=cookie,
         proxies=proxies,  # Proxy (opsional)
         headers={"User-Agent": current_user_agent},  # User-Agent awal
     ) as bot:
@@ -98,9 +100,9 @@ async def auto_follow(username, password):
 
 # Jalankan script
 if __name__ == "__main__":
-    # Login ke TikTok
-    user, pwd = login_tiktok()
+    # Baca cookie dari input
+    cookie = get_cookie()
 
     # Jalankan auto follow
     import asyncio
-    asyncio.run(auto_follow(user, pwd))
+    asyncio.run(auto_follow(cookie))
